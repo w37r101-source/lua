@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive UI Menu</title>
     
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Font Awesome for icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- Phosphor Icons for icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Phosphor Icons for icons --><script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- Google Fonts for Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Google Fonts for Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
 
@@ -53,11 +50,11 @@
             transform: translate(-50%, -50%);
             width: 33.5vh;
             min-width: 320px;
-            /* Updated Accent Color: Note: Style attribute is applied in HTML body for initial load */
-            background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(10,10,10,0.92) 100%);
-            backdrop-filter: blur(8px); /* Added subtle blur for better look */
+            /* FIX: Use a simple, high-opacity dark background color */
+            background-color: rgba(0, 0, 0, 0.85);
+            /* FIX: REMOVED backdrop-filter as it causes black box issues in NUI */
             border-radius: 1.5vh;
-            box-shadow: 0 0 2.5vh rgba(0, 0, 0, 0.7); /* Slightly stronger shadow */
+            box-shadow: 0 0 2.5vh rgba(0, 0, 0, 0.7); /* Subtle shadow around the box */
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -117,6 +114,8 @@
             overflow-y: auto;
             padding: 0; 
             position: relative;
+            /* Added background to content area for readability */
+            background-color: rgba(10, 10, 10, 0.8);
         }
 
         .menu-highlight-bar {
@@ -160,6 +159,7 @@
             padding: 0.5vh 1.4vh; /* Padding restored for alignment */
             margin: 0.5vh 0 0 0; 
             border-bottom: 0.05vh solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(10, 10, 10, 0.8); /* Match menu content background */
             cursor: default;
         }
 
@@ -321,34 +321,26 @@
 </head>
 <body>
 
-    <!-- Set the inline CSS variable for initial load -->
-    <div class="menu-container" style="--accent-color:rgb(172, 95, 233);">
+    <!-- Set the inline CSS variable for initial load --><div class="menu-container" style="--accent-color:rgb(172, 95, 233);">
         <div class="menu-header">
-            <!-- INLINE SVG BANNER for reliable loading and custom design, using the purple accent -->
-            <svg width="100%" height="100%" viewBox="0 0 320 95" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <!-- INLINE SVG BANNER for reliable loading and custom design, using the purple accent --><svg width="100%" height="100%" viewBox="0 0 320 95" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <!-- Gradient for the main text and design elements -->
-                    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <!-- Gradient for the main text and design elements --><linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" style="stop-color:rgb(172, 95, 233);stop-opacity:1" />
                         <stop offset="100%" style="stop-color:rgb(220, 150, 255);stop-opacity:1" />
                     </linearGradient>
-                    <!-- Subtle pattern for a "glitchy" background feel -->
-                    <pattern id="glitchPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <!-- Subtle pattern for a "glitchy" background feel --><pattern id="glitchPattern" width="20" height="20" patternUnits="userSpaceOnUse">
                         <rect width="20" height="20" fill="rgba(20, 0, 30, 0.1)" />
                         <rect x="5" y="5" width="2" height="2" fill="rgba(172, 95, 233, 0.15)" />
                         <rect x="12" y="12" width="4" height="4" fill="rgba(172, 95, 233, 0.1)" />
                     </pattern>
                 </defs>
 
-                <!-- Background (Subtle glitch effect) -->
-                <rect width="100%" height="100%" fill="url(#glitchPattern)" />
+                <!-- Background (Subtle glitch effect) --><rect width="100%" height="100%" fill="url(#glitchPattern)" />
 
-                <!-- Main Menu Name Text - Bold and centered -->
-                <text x="160" y="55" font-family="Inter, sans-serif" font-size="35" font-weight="900" text-anchor="middle" fill="url(#purpleGradient)" style="letter-spacing: 2px;">HENTAI</text>
+                <!-- Main Menu Name Text - Bold and centered --><text x="160" y="55" font-family="Inter, sans-serif" font-size="35" font-weight="900" text-anchor="middle" fill="url(#purpleGradient)" style="letter-spacing: 2px;">HENTAI</text>
                 
-                <!-- Removed Subtitle/Version text -->
-                <!-- <text x="160" y="75" font-family="Inter, sans-serif" font-size="12" font-weight="500" text-anchor="middle" fill="white" opacity="0.8">A N I M A T E D &nbsp; M E N U</text> -->
-            </svg>
+                <!-- Removed Subtitle/Version text --><!-- <text x="160" y="75" font-family="Inter, sans-serif" font-size="12" font-weight="500" text-anchor="middle" fill="white" opacity="0.8">A N I M A T E D &nbsp; M E N U</text> --></svg>
         </div>
         <div class="breadcrumb-container">
             <i id="back-button" class="ph ph-arrow-left" style="display: none;"></i>
@@ -356,8 +348,7 @@
         </div>
         
         <div class="menu-content hide-scrollbar">
-            <!-- Dynamic content will be injected here by JavaScript -->
-        </div>
+            <!-- Dynamic content will be injected here by JavaScript --></div>
         
         <div class="menu-footer">
             <span>Hentai.lua | V2.0</span>
