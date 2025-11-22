@@ -46,8 +46,11 @@
         .menu-container {
             position: absolute;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            /* --- MOVED TO RIGHT SIDE --- */
+            left: auto; 
+            right: 2%; /* Anchor 2% from the right edge */
+            transform: translate(0, -50%); /* Keep vertical centering, remove horizontal centering */
+            /* --------------------------- */
             width: 33.5vh;
             min-width: 320px;
             /* FIX 1: Make the main container completely transparent */
@@ -766,7 +769,7 @@
                         
                         // Special case for Menu Scale
                         if(slider.closest('.menu-item').dataset.label === 'Menu Scale') {
-                            menuContainer.style.transform = `translate(-50%, -50%) scale(${slider.value})`;
+                            menuContainer.style.transform = `translate(0, -50%) scale(${slider.value})`; // Note: horizontal translate is 0 for right alignment
                         }
                         
                         sendNuiMessage('sliderChange', {
