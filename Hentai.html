@@ -46,11 +46,11 @@
         .menu-container {
             position: absolute;
             top: 50%;
-            /* --- MOVED TO RIGHT SIDE --- */
-            left: auto; 
-            right: 2%; /* Anchor 2% from the right edge */
+            /* --- MOVED TO RIGHT SIDE WITH CALCULATION --- */
+            left: calc(100% - 33.5vh - 2%); /* 100% - menu width - 2% margin */
+            right: auto; 
             transform: translate(0, -50%); /* Keep vertical centering, remove horizontal centering */
-            /* --------------------------- */
+            /* ------------------------------------------- */
             width: 33.5vh;
             min-width: 320px;
             /* FIX 1: Make the main container completely transparent */
