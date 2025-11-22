@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive UI Menu</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Phosphor Icons for icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts for Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            font-size: 16px;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            /* Transparent background */
+            background-color: transparent; 
+            background-image: none;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .hide-scrollbar {
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .menu-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 33.5vh;
+            min-width: 320px;
+            /* Updated Accent Color: Note: Style attribute is applied in HTML body for initial load */
+            background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(10,10,10,0.92) 100%);
+            backdrop-filter: blur(8px); /* Added subtle blur for better look */
+            border-radius: 1.5vh;
+            box-shadow: 0 0 2.5vh rgba(0, 0, 0, 0.7); /* Slightly stronger shadow */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .menu-header {
+            width: 100%;
+            height: 9.5vh; /* Fixed height for the banner area */
+            max-height: 9.5vh;
+            overflow: hidden;
+            border-radius: 1.5vh 1.5vh 0 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 -0.1vh 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-header svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .breadcrumb-container {
+            background: rgba(0, 0, 0, 0.82);
+            font-size: 1.1vh;
+            padding: 0.8vh 1.4vh; /* Padding restored for alignment */
+            text-align: left;
+            border-bottom: 0.05vh solid rgba(255, 255, 255, 0.1);
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+        }
+
+        #back-button {
+            cursor: pointer;
+            margin-right: 0.8vh;
+            color: var(--accent-color, rgb(172, 95, 233)); 
+            font-size: 1.3vh;
+            transition: transform 0.2s ease;
+        }
+        #back-button:hover {
+            transform: scale(1.1);
+        }
+
+        .breadcrumb-text {
+            color: var(--accent-color, rgb(172, 95, 233)); 
+            font-weight: 500;
+        }
+
+        .menu-content {
+            max-height: 38vh;
+            overflow-y: auto;
+            padding: 0; 
+            position: relative;
+        }
+
+        .menu-highlight-bar {
+            overflow: hidden;
+            position: absolute;
+            left: 0; 
+            right: 0; 
+            border-radius: 0; 
+            background-color: var(--accent-color, rgb(172, 95, 233)); 
+            opacity: 0.25; /* Increased opacity for better visibility */
+            box-shadow: inset 0 0 0 0.10vh var(--accent-color, rgb(172, 95, 233)), 0 0 0.5vh var(--accent-color, rgb(172, 95, 233)); 
+            z-index: 0;
+            transition: top 150ms ease, height 150ms ease, opacity 150ms ease;
+            pointer-events: none;
+        }
+
+        .menu-item {
+            padding: 0.8vh 1.4vh; 
+            justify-content: space-between;
+            display: flex;
+            align-items: center;
+            font-size: 1.4vh;
+            gap: 1vh;
+            font-weight: 400;
+            cursor: pointer;
+            transition: border-left 0.2s ease-in-out, background-color 0.15s ease; /* Added background transition */
+            margin: 0.2vh 0; 
+            background-color: transparent;
+            position: relative;
+            z-index: 1;
+            border-radius: 0; 
+            border-left: 0.4vh solid transparent; 
+        }
+        
+        /* New: Styling for non-interactive items (Section headers, placeholders) */
+        .menu-section-header {
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-color, rgb(172, 95, 233)); 
+            font-size: 1.2vh;
+            padding: 0.5vh 1.4vh; /* Padding restored for alignment */
+            margin: 0.5vh 0 0 0; 
+            border-bottom: 0.05vh solid rgba(255, 255, 255, 0.1);
+            cursor: default;
+        }
+
+        .menu-placeholder {
+            padding: 0.8vh 1.4vh; /* Padding restored for alignment */
+            font-size: 1.2vh;
+            font-style: italic;
+            color: #aaa;
+            margin: 0.2vh 0; 
+            cursor: default;
+            display: flex;
+            align-items: center;
+            gap: 1vh;
+        }
+        
+        .menu-item.active {
+            border-left: 0.4vh solid var(--accent-color, rgb(172, 95, 233)); 
+            /* Added subtle background to distinguish the active tab */
+            background-color: rgba(255, 255, 255, 0.02); 
+        }
+
+        .menu-icon {
+            font-size: 1.3vh;
+            color: var(--accent-color, rgb(172, 95, 233)); 
+            min-width: 18px;
+            text-align: center;
+            /* Added margin-left to push icon away from the left border slightly */
+            margin-left: -0.2vh; 
+        }
+
+        .menu-label {
+            flex-grow: 1;
+            text-align: left;
+            font-size: 1.2vh;
+            text-shadow: 0 0 0.1vh rgba(0, 0, 0, 0.5); 
+        }
+        
+        /* New: Button and Input Controls */
+        .menu-item[data-type="button"] .menu-label {
+            flex-grow: 1;
+        }
+        .menu-item[data-type="button"] .control-action-text {
+            font-size: 1.0vh;
+            font-weight: 500;
+            opacity: 0.7;
+            color: var(--accent-color, rgb(172, 95, 233)); 
+        }
+        .menu-item[data-type="button"]:hover .control-action-text {
+            opacity: 1;
+        }
+
+        .menu-input-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+        }
+        .menu-input {
+            background: #222;
+            border: 0.05vh solid #555;
+            border-radius: 0.5vh;
+            color: white;
+            padding: 0.5vh 0.8vh;
+            font-size: 1.2vh;
+            width: 12vh; 
+            outline: none;
+            text-align: right;
+            transition: border-color 0.2s;
+        }
+        .menu-input:focus {
+            border-color: var(--accent-color, rgb(172, 95, 233)); 
+        }
+
+        .menu-footer {
+            background: rgba(0, 0, 0, 0.82);
+            font-size: 1.1vh;
+            padding: 0.9vh 1.4vh; /* Padding restored for alignment */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 0.05vh solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Styles for existing components */
+        .toggle-switch {
+            width: 3vh;
+            height: 1.5vh;
+            background-color: #555;
+            border-radius: 1vh;
+            position: relative;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toggle-switch.active {
+            background-color: var(--accent-color, rgb(172, 95, 233)); 
+        }
+        .toggle-knob {
+            position: absolute;
+            width: 1.1vh;
+            height: 1.1vh;
+            border-radius: 50%;
+            background: white;
+            top: 0.2vh;
+            left: 0.2vh;
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-switch.active .toggle-knob {
+            transform: translateX(1.45vh);
+        }
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 1vh;
+        }
+        .range-value {
+            font-size: 1.1vh;
+            min-width: 3vh;
+            text-align: right;
+            color: #ccc;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 10.5vh;
+            height: 0.55vh;
+            background: #444;
+            border-radius: 0.75vh;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 1.2vh;
+            height: 1.2vh;
+            border-radius: 50%;
+            background: var(--accent-color, rgb(172, 95, 233)); 
+            cursor: pointer;
+        }
+        
+        .options-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5vh;
+            font-size: 1.2vh;
+            color: white;
+            background: rgba(0, 0, 0, 0.4);
+            border: 0.1vh solid #555;
+            border-radius: 0.5vh;
+            padding: 0.5vh 0.8vh;
+        }
+        .option-arrow {
+            color: var(--accent-color, rgb(172, 95, 233)); 
+            font-size: 1.1vh;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+        .option-value {
+            min-width: 10vh;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Set the inline CSS variable for initial load -->
+    <div class="menu-container" style="--accent-color:rgb(172, 95, 233);">
+        <div class="menu-header">
+            <!-- INLINE SVG BANNER for reliable loading and custom design, using the purple accent -->
+            <svg width="100%" height="100%" viewBox="0 0 320 95" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <!-- Gradient for the main text and design elements -->
+                    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:rgb(172, 95, 233);stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:rgb(220, 150, 255);stop-opacity:1" />
+                    </linearGradient>
+                    <!-- Subtle pattern for a "glitchy" background feel -->
+                    <pattern id="glitchPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <rect width="20" height="20" fill="rgba(20, 0, 30, 0.1)" />
+                        <rect x="5" y="5" width="2" height="2" fill="rgba(172, 95, 233, 0.15)" />
+                        <rect x="12" y="12" width="4" height="4" fill="rgba(172, 95, 233, 0.1)" />
+                    </pattern>
+                </defs>
+
+                <!-- Background (Subtle glitch effect) -->
+                <rect width="100%" height="100%" fill="url(#glitchPattern)" />
+
+                <!-- Main Menu Name Text - Bold and centered -->
+                <text x="160" y="55" font-family="Inter, sans-serif" font-size="35" font-weight="900" text-anchor="middle" fill="url(#purpleGradient)" style="letter-spacing: 2px;">HENTAI</text>
+                
+                <!-- Removed Subtitle/Version text -->
+                <!-- <text x="160" y="75" font-family="Inter, sans-serif" font-size="12" font-weight="500" text-anchor="middle" fill="white" opacity="0.8">A N I M A T E D &nbsp; M E N U</text> -->
+            </svg>
+        </div>
+        <div class="breadcrumb-container">
+            <i id="back-button" class="ph ph-arrow-left" style="display: none;"></i>
+            <span id="breadcrumb-path">Menu / <span class="breadcrumb-text">Main Menu</span></span>
+        </div>
+        
+        <div class="menu-content hide-scrollbar">
+            <!-- Dynamic content will be injected here by JavaScript -->
+        </div>
+        
+        <div class="menu-footer">
+            <span>Hentai.lua | V2.0</span>
+            <span class="page-indicator"></span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuContent = document.querySelector('.menu-content');
+            const highlightBar = document.createElement('div');
+            highlightBar.className = 'menu-highlight-bar';
+            menuContent.appendChild(highlightBar);
+
+            const breadcrumbPath = document.getElementById('breadcrumb-path');
+            const breadcrumbText = breadcrumbPath.querySelector('.breadcrumb-text');
+            const pageIndicator = document.querySelector('.page-indicator');
+            const backButton = document.getElementById('back-button');
+            const menuContainer = document.querySelector('.menu-container');
+
+            // --- Fixed Accent Color initialization in JS ---
+            // Use the same value for consistency across static elements and JS logic
+            const DEFAULT_ACCENT_COLOR = "rgb(172, 95, 233)";
+
+            // Ensure CSS variable is applied in case of dynamic changes
+            menuContainer.style.setProperty('--accent-color', DEFAULT_ACCENT_COLOR);
+
+            // --- UPDATED MENU DATA (No changes needed, keeping structure) ---
+            const menuData = {
+                'Main Menu': [
+                    { type: 'link', label: 'Self', icon: 'fa-solid fa-user', target: 'Self' },
+                    { type: 'link', label: 'Server', icon: 'fas fa-users', target: 'Server' },
+                    { type: 'link', label: 'Teleport', icon: 'fa-solid fa-location-dot', target: 'Teleport' },
+                    { type: 'link', label: 'Vehicle', icon: 'fa-solid fa-car', target: 'Vehicle' },
+                    { type: 'link', label: 'Weapons', icon: 'fa-solid fa-gun', target: 'Weapons' },
+                    { type: 'link', label: 'Misc', icon: 'fa-solid fa-cube', target: 'Misc' },
+                    { type: 'link', label: 'Triggers', icon: 'fa-solid fa-bolt', target: 'Triggers' },
+                    { type: 'link', label: 'Settings', icon: 'fa-solid fa-gear', target: 'Settings' },
+                ],
+                'Self': [
+                    { type: 'toggle', label: 'Godmode', default: false, icon: 'fa-solid fa-infinity' },
+                    { type: 'toggle', label: 'No Ragdoll', default: false, icon: 'fa-solid fa-dice-one' },
+                    { type: 'toggle', label: 'No Clip', default: false, icon: 'fa-solid fa-ghost' },
+                    { type: 'toggle', label: 'Invisibility', default: false, icon: 'fa-solid fa-eye-slash' },
+                    { type: 'toggle', label: 'Free Camera', default: false, icon: 'fa-solid fa-camera' },
+                    { type: 'toggle', label: 'Super Jump', default: false, icon: 'fa-solid fa-shoe-prints' },
+                    { type: 'toggle', label: 'Fast Run', default: false, icon: 'fa-solid fa-person-running' },
+                    { type: 'toggle', label: 'Super Strength', default: false, icon: 'fa-solid fa-hand-fist' },
+                    { type: 'toggle', label: 'Super Punch', default: false, icon: 'fa-solid fa-hand-fist' },
+                    { type: 'toggle', label: 'Infinite Stamina', default: false, icon: 'fa-solid fa-battery-full' },
+                    { type: 'section', label: 'Model Changer' },
+                    { type: 'input', label: 'Model Name', default: 'mp_f_freemode_01', placeholder: 'Model Hash/Name', icon: 'fa-solid fa-person' },
+                    { type: 'button', label: 'Change Model', icon: 'fa-solid fa-person-circle-check' },
+                    { type: 'toggle', label: 'RGB Bodysuit', default: false, icon: 'fa-solid fa-palette' },
+                    { type: 'button', label: 'Open Clothing Menu', icon: 'fa-solid fa-shirt' },
+                    { type: 'button', label: 'Randomize Outfit', icon: 'fa-solid fa-dice' },
+                    { type: 'button', label: 'Print Outfit Codes', icon: 'fa-solid fa-code' },
+                    { type: 'button', label: '100k or die', icon: 'fa-solid fa-sack-dollar' },
+                    { type: 'button', label: 'legit', icon: 'fa-solid fa-handshake-angle' },
+                    { type: 'section', label: 'Functions' },
+                    { type: 'button', label: 'Heal', icon: 'fa-solid fa-briefcase-medical' },
+                    { type: 'button', label: 'Armor', icon: 'fa-solid fa-helmet-safety' },
+                    { type: 'button', label: 'Revive', icon: 'fa-solid fa-heart-pulse' },
+                    { type: 'button', label: '100k Revive', icon: 'fa-solid fa-dollar-sign' },
+                    { type: 'button', label: 'Suicide', icon: 'fa-solid fa-skull' },
+                    { type: 'button', label: 'Force Ragdoll', icon: 'fa-solid fa-person-falling-burst' },
+                    { type: 'button', label: 'Remove Crutch', icon: 'fa-solid fa-person-walking' },
+                ],
+                'Server': [
+                    { type: 'section', label: 'Player List' },
+                    { type: 'button', label: 'Refresh Player List', icon: 'fa-solid fa-arrows-rotate' },
+                    { type: 'placeholder', label: 'Player List (up to 20 nearby players)', icon: 'fa-solid fa-list' }, // Placeholder for dynamic list
+                    { type: 'section', label: 'Player Actions' },
+                    { type: 'input', label: 'Target Player', default: 'Player ID/Name', placeholder: 'Player ID/Name', icon: 'fa-solid fa-crosshairs' },
+                    { type: 'button', label: 'Select Player', icon: 'fa-solid fa-circle-check' },
+                    { type: 'button', label: 'Clear Selection', icon: 'fa-solid fa-circle-xmark' },
+                    { type: 'button', label: 'Spectate Player', icon: 'fa-solid fa-video' },
+                    { type: 'button', label: 'Teleport to Player', icon: 'fa-solid fa-person-walking-arrow-right' },
+                    { type: 'button', label: 'Kick From Vehicle', icon: 'fa-solid fa-person-through-window' },
+                    { type: 'button', label: 'Send To Void', icon: 'fa-solid fa-down-left-and-up-right-to-center' },
+                    { type: 'button', label: 'Launch Player', icon: 'fa-solid fa-plane-departure' },
+                    { type: 'button', label: 'Attach Car To Player', icon: 'fa-solid fa-car-side' },
+                    { type: 'button', label: 'Copy Outfit', icon: 'fa-solid fa-copy' },
+                    { type: 'button', label: 'Give Them Backshots', icon: 'fa-solid fa-burst' }, // Placeholder icon
+                    { type: 'button', label: 'Blame Arrest', icon: 'fa-solid fa-handcuffs' },
+                    { type: 'button', label: 'Twerk On Them', icon: 'fa-solid fa-person-biking-mountain' }, // Placeholder icon
+                ],
+                'Teleport': [
+                    { type: 'section', label: 'Coordinates' },
+                    { type: 'input', label: 'Coords', default: '0.0, 0.0, 0.0', placeholder: 'X, Y, Z', icon: 'fa-solid fa-map-location-dot' },
+                    { type: 'button', label: 'Teleport to Coords', icon: 'fa-solid fa-location-arrow' },
+                    { type: 'button', label: 'Waypoint', icon: 'fa-solid fa-diamond-turn-right' },
+                    { type: 'section', label: 'Saved Locations' },
+                    { type: 'button', label: 'FIB Building', icon: 'fa-solid fa-building' },
+                    { type: 'button', label: 'Mission Row PD', icon: 'fa-solid fa-building-columns' },
+                    { type: 'button', label: 'Pillbox Hospital', icon: 'fa-solid fa-hospital' },
+                    { type: 'button', label: 'coms ship', icon: 'fa-solid fa-ship' },
+                    { type: 'button', label: 'Del Perro Pier', icon: 'fa-solid fa-ferry' },
+                    { type: 'button', label: 'Grove Street', icon: 'fa-solid fa-tree' },
+                    { type: 'button', label: 'Legion Square', icon: 'fa-solid fa-square-full' },
+                    { type: 'button', label: 'LS Customs', icon: 'fa-solid fa-wrench-synthesis' },
+                    { type: 'button', label: 'Maze Bank', icon: 'fa-solid fa-building-columns' },
+                    { type: 'button', label: 'Mirror Park', icon: 'fa-solid fa-water' },
+                    { type: 'button', label: 'Vespucci Beach', icon: 'fa-solid fa-umbrella-beach' },
+                    { type: 'button', label: 'Vinewood', icon: 'fa-solid fa-clapperboard' },
+                    { type: 'button', label: 'Sandy Shores', icon: 'fa-solid fa-desert' },
+                    { type: 'section', label: 'Other' },
+                    { type: 'button', label: 'Print Current Coords', icon: 'fa-solid fa-print' },
+                    { type: 'button', label: 'Save/TP Slot 1', icon: 'fa-solid fa-save' },
+                    { type: 'button', label: 'Save/TP Slot 2', icon: 'fa-solid fa-save' },
+                    { type: 'button', label: 'Save/TP Slot 3', icon: 'fa-solid fa-save' },
+                ],
+                'Vehicle': [
+                    { type: 'section', label: 'Mods' },
+                    { type: 'toggle', label: 'Vehicle Godmode', default: false, icon: 'fa-solid fa-shield-halved' },
+                    { type: 'toggle', label: 'Force Vehicle Engine', default: false, icon: 'fa-solid fa-engine' },
+                    { type: 'toggle', label: 'Vehicle Auto Repair', default: false, icon: 'fa-solid fa-screwdriver-wrench' },
+                    { type: 'toggle', label: 'Vehicle Hop', default: false, icon: 'fa-solid fa-forward' },
+                    { type: 'toggle', label: 'Rainbow Vehicle', default: false, icon: 'fa-solid fa-rainbow' },
+                    { type: 'toggle', label: 'Easy Handling', default: false, icon: 'fa-solid fa-grip-lines' },
+                    { type: 'toggle', label: 'No Gravity', default: false, icon: 'fa-solid fa-ban' },
+                    { type: 'toggle', label: 'Bike Fly', default: false, icon: 'fa-solid fa-motorcycle' },
+                    { type: 'toggle', label: 'E Boost', default: false, icon: 'fa-solid fa-rocket' },
+                    // The Boost Speed slider is placed exactly here, between E Boost and Instant Breaks.
+                    { type: 'slider', label: 'Boost Speed', min: 1, max: 20, default: 5, step: 1, icon: 'fa-solid fa-tachometer-alt' },
+                    { type: 'toggle', label: 'Instant Breaks', default: false, icon: 'fa-solid fa-hand-stop' },
+                    { type: 'toggle', label: 'Seatbelt', default: false, icon: 'fa-solid fa-user-lock' },
+                    { type: 'toggle', label: 'Drive-By', default: false, icon: 'fa-solid fa-truck-monster' },
+                    { type: 'section', label: 'Plate & Spawning' },
+                    { type: 'input', label: 'License Plate', default: 'WIPED', placeholder: 'Custom Plate', icon: 'fa-solid fa-id-card' },
+                    { type: 'button', label: 'Set License Plate', icon: 'fa-solid fa-check' },
+                    { type: 'input', label: 'Vehicle Model', default: 'Adder', placeholder: 'Vehicle Hash/Name', icon: 'fa-solid fa-car-on' },
+                    { type: 'button', label: 'Spawn Car', icon: 'fa-solid fa-plus' },
+                    { type: 'section', label: 'Other' },
+                    { type: 'button', label: 'Repair Vehicle', icon: 'fa-solid fa-heart-circle-check' },
+                    { type: 'button', label: 'Flip Vehicle', icon: 'fa-solid fa-undo' },
+                    { type: 'button', label: 'Clean Vehicle', icon: 'fa-solid fa-broom' },
+                    { type: 'button', label: 'Delete Vehicle', icon: 'fa-solid fa-trash' },
+                    { type: 'button', label: 'Toggle Vehicle Engine', icon: 'fa-solid fa-power-off' },
+                    { type: 'button', label: 'Max Vehicle Upgrades', icon: 'fa-solid fa-arrow-up' },
+                    { type: 'button', label: 'Teleport into Closest Vehicle', icon: 'fa-solid fa-hand-point-up' },
+                    { type: 'button', label: 'Unlock Closest Vehicle', icon: 'fa-solid fa-unlock' },
+                    { type: 'button', label: 'Lock Closest Vehicle', icon: 'fa-solid fa-lock' },
+                ],
+                'Weapons': [
+                    { type: 'section', label: 'Weapon Mods' },
+                    { type: 'toggle', label: 'One-Shot Kill', default: false, icon: 'fa-solid fa-crosshairs' },
+                    { type: 'toggle', label: 'Infinite Ammo', default: false, icon: 'fa-solid fa-arrows-rotate' },
+                    { type: 'toggle', label: 'Rapid Fire', default: false, icon: 'fa-solid fa-fire' },
+                    { type: 'toggle', label: 'Rainbow Gun', default: false, icon: 'fa-solid fa-palette' },
+                    { type: 'toggle', label: 'Force Weapon Wheel', default: false, icon: 'fa-solid fa-circle-notch' },
+                    { type: 'section', label: 'Give Weapons' },
+                    { type: 'input', label: 'Weapon Name', default: 'WEAPON_PISTOL', placeholder: 'Weapon Hash/Name', icon: 'fa-solid fa-pistol' },
+                    { type: 'button', label: 'Give Weapon', icon: 'fa-solid fa-circle-plus' },
+                    { type: 'button', label: 'Give All Vanilla Weapons', icon: 'fa-solid fa-list-check' },
+                    { type: 'button', label: 'Print Addon Weapons', icon: 'fa-solid fa-print' },
+                    { type: 'section', label: 'Risky' },
+                    { type: 'toggle', label: 'Explosive Ammo', default: false, icon: 'fa-solid fa-bomb' },
+                ],
+                'Misc': [
+                    { type: 'section', label: 'World options' },
+                    // Weather
+                    { type: 'button', label: 'Set Weather: Sunny', icon: 'fa-solid fa-sun' },
+                    { type: 'button', label: 'Set Weather: Rain', icon: 'fa-solid fa-cloud-showers-heavy' },
+                    { type: 'button', label: 'Set Weather: Thunder', icon: 'fa-solid fa-cloud-bolt' },
+                    { type: 'button', label: 'Set Weather: Snow', icon: 'fa-solid fa-snowflake' },
+                    { type: 'button', label: 'Set Weather: Foggy', icon: 'fa-solid fa-fog' },
+                    { type: 'button', label: 'Set Weather: Overcast', icon: 'fa-solid fa-cloud' },
+                    { type: 'button', label: 'Set Weather: Clear', icon: 'fa-solid fa-cloud-sun' },
+                    // Time
+                    { type: 'button', label: 'Set Time: Morning (9:00)', icon: 'fa-solid fa-clock' },
+                    { type: 'button', label: 'Set Time: Noon (12:00)', icon: 'fa-solid fa-clock' },
+                    { type: 'button', label: 'Set Time: Evening (18:00)', icon: 'fa-solid fa-clock' },
+                    { type: 'button', label: 'Set Time: Night (0:00)', icon: 'fa-solid fa-clock' },
+                    { type: 'section', label: 'Protections' },
+                    { type: 'toggle', label: 'Anti-Freeze', default: false, icon: 'fa-solid fa-stop' },
+                    { type: 'toggle', label: 'Anti-Teleport', default: false, icon: 'fa-solid fa-map-pin' },
+                    { type: 'toggle', label: 'WaveShield Detect', default: false, icon: 'fa-solid fa-magnifying-glass' },
+                    { type: 'toggle', label: 'Spectator List', default: false, icon: 'fa-solid fa-glasses' },
+                ],
+                'Triggers': [
+                    { type: 'section', label: 'Client Triggers' },
+                    { type: 'placeholder', label: '(No options listed in file)', icon: 'fa-solid fa-exclamation' },
+                    { type: 'section', label: 'Server Triggers' },
+                    { type: 'placeholder', label: '(No options listed in file)', icon: 'fa-solid fa-exclamation' },
+                ],
+                'Settings': [
+                    { type: 'section', label: 'Menu Design' },
+                    { type: 'link', label: 'Themes & Scale', icon: 'fa-solid fa-swatchbook', target: 'Theme_Settings' },
+                    { type: 'toggle', label: 'RGB Menu', default: false, icon: 'fa-solid fa-shuffle' },
+                    { type: 'slider', label: 'R (Red)', min: 0, max: 255, default: 255, step: 1, icon: 'fa-solid fa-droplet' },
+                    { type: 'slider', label: 'G (Green)', min: 0, max: 255, default: 105, step: 1, icon: 'fa-solid fa-droplet' },
+                    { type: 'slider', label: 'B (Blue)', min: 0, max: 255, default: 180, step: 1, icon: 'fa-solid fa-droplet' },
+                    { type: 'section', label: 'Checkers' },
+                    { type: 'button', label: 'Anti-Cheat Checker', icon: 'fa-solid fa-user-check' },
+                    { type: 'button', label: 'Framework Checker', icon: 'fa-solid fa-boxes-stacked' },
+                    { type: 'button', label: 'Get Server IP', icon: 'fa-solid fa-server' },
+                    { type: 'section', label: 'Crosshair Maker' },
+                    { type: 'toggle', label: 'Enable Crosshair', default: false, icon: 'fa-solid fa-plus-minus' },
+                    { type: 'slider', label: 'Crosshair Red', min: 0, max: 255, default: 255, step: 1, icon: 'fa-solid fa-paintbrush' },
+                    { type: 'slider', label: 'Crosshair Green', min: 0, max: 255, default: 255, step: 1, icon: 'fa-solid fa-paintbrush' },
+                    { type: 'slider', label: 'Crosshair Blue', min: 0, max: 255, default: 255, step: 1, icon: 'fa-solid fa-paintbrush' },
+                    { type: 'slider', label: 'Alpha', min: 0, max: 1, default: 1, step: 0.05, icon: 'fa-solid fa-low-vision' },
+                    { type: 'slider', label: 'Size', min: 1, max: 10, default: 3, step: 1, icon: 'fa-solid fa-maximize' },
+                    { type: 'button', label: 'Reset Crosshair', icon: 'fa-solid fa-eraser' },
+                ],
+                // Sub-menu for Themes and Scale
+                'Theme_Settings': [
+                    // Updated the default theme color map to include the new purple value
+                    { type: 'options', label: 'Theme', options: ['Purple', 'Blue', 'Green', 'Yellow'], default: 'Purple', colors: {'Purple': DEFAULT_ACCENT_COLOR, 'Blue': '#3498db', 'Green': '#2ecc71', 'Yellow': '#f1c40f'}, icon: 'fa-solid fa-palette' },
+                    { type: 'toggle', label: 'Show Keybinds', default: true, icon: 'fa-solid fa-keyboard' },
+                    { type: 'slider', label: 'Menu Scale', min: 0.8, max: 1.2, step: 0.1, default: 1, icon: 'fa-solid fa-expand' },
+                ],
+            };
+            // --- END UPDATED MENU DATA ---
+            
+            let navigationStack = ['Main Menu'];
+
+            /**
+             * Sends a message to your cheat client.
+             * @param {string} eventName - The name of the event/callback (e.g., 'toggleOption').
+             * @param {object} payload - The data to send (e.g., { label: 'God Mode', value: true }).
+             */
+            function sendNuiMessage(eventName, payload = {}) {
+                // The resource name 'macho-cheat' is a placeholder. Your cheat client will
+                // need to listen for NUI messages using this name.
+                fetch(`https://macho-cheat/${eventName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    },
+                    body: JSON.stringify(payload)
+                }).then(resp => resp.json()).then(resp => {
+                    // You can optionally handle responses from your client here
+                }).catch(e => {}); // Catch errors if the resource isn't ready
+                
+                // Simple console log for demonstration
+                console.log(`NUI Message Sent: ${eventName} with payload:`, payload);
+            }
+
+            function updateHighlight() {
+                // Select only interactive items for highlight
+                const interactiveItems = Array.from(document.querySelectorAll('.menu-item')).filter(item => item.dataset.type !== 'section' && item.dataset.type !== 'placeholder');
+                const activeItem = document.querySelector('.menu-item.active');
+
+                if (!activeItem || interactiveItems.length === 0 || activeItem.dataset.type === 'section' || activeItem.dataset.type === 'placeholder') {
+                    highlightBar.style.opacity = '0';
+                    pageIndicator.textContent = '';
+                    return;
+                }
+                
+                highlightBar.style.opacity = '0.25'; /* Adjusted opacity */
+                highlightBar.style.top = `${activeItem.offsetTop}px`;
+                highlightBar.style.height = `${activeItem.offsetHeight}px`;
+
+                const activeIndex = interactiveItems.indexOf(activeItem) + 1;
+                pageIndicator.textContent = `${activeIndex}/${interactiveItems.length}`;
+            }
+
+            function renderMenu(menuName) {
+                // Clear existing content
+                menuContent.innerHTML = '';
+                menuContent.appendChild(highlightBar);
+
+                const items = menuData[menuName];
+                if (!items) {
+                    const errorEl = document.createElement('div');
+                    errorEl.className = 'menu-placeholder';
+                    errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation menu-icon fa-fw" style="color: ${DEFAULT_ACCENT_COLOR};"></i><span class="menu-label">Menu not found: ${menuName}</span>`;
+                    menuContent.appendChild(errorEl);
+                    return;
+                }
+
+                items.forEach((itemData, index) => {
+                    
+                    if (itemData.type === 'section') {
+                        const sectionEl = document.createElement('div');
+                        sectionEl.className = 'menu-section-header';
+                        sectionEl.textContent = itemData.label;
+                        menuContent.appendChild(sectionEl);
+                        return;
+                    }
+                    
+                    if (itemData.type === 'placeholder') {
+                        const placeholderEl = document.createElement('div');
+                        placeholderEl.className = 'menu-placeholder';
+                        placeholderEl.innerHTML = `<i class="${itemData.icon || 'fa-solid fa-circle'} menu-icon fa-fw" style="color: #aaa; opacity: 0.6;"></i><span class="menu-label">${itemData.label}</span>`;
+                        menuContent.appendChild(placeholderEl);
+                        return;
+                    }
+
+                    // For all interactive items (link, toggle, slider, options, button, input)
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'menu-item';
+                    itemEl.dataset.label = itemData.label;
+                    itemEl.dataset.type = itemData.type;
+
+                    let controlHtml = '';
+
+                    switch (itemData.type) {
+                        case 'link':
+                            controlHtml = `<i class="ph ph-caret-right" style="font-size: 1.2vh;"></i>`;
+                            itemEl.dataset.target = itemData.target;
+                            break;
+                        case 'toggle':
+                            const isActive = itemData.default ? 'active' : '';
+                            controlHtml = `<div class="toggle-switch ${isActive}"><div class="toggle-knob"></div></div>`;
+                            break;
+                        case 'slider':
+                            controlHtml = `
+                                <div class="range-container">
+                                    <span class="range-value">${itemData.default}</span>
+                                    <input type="range" min="${itemData.min}" max="${itemData.max}" value="${itemData.default}" step="${itemData.step || 1}">
+                                </div>`;
+                            break;
+                        case 'options':
+                             controlHtml = `
+                                <div class="options-container">
+                                    <i class="ph ph-caret-left option-arrow"></i>
+                                    <span class="option-value">${itemData.default}</span>
+                                    <i class="ph ph-caret-right option-arrow"></i>
+                                </div>`;
+                            break;
+                        case 'button':
+                            controlHtml = `<span class="control-action-text">[EXECUTE]</span>`;
+                            break;
+                        case 'input':
+                            controlHtml = `
+                                <div class="menu-input-container">
+                                    <input type="text" class="menu-input" placeholder="${itemData.placeholder || itemData.label}" value="${itemData.default || ''}">
+                                </div>`;
+                            break;
+                    }
+                    
+                    itemEl.innerHTML = `
+                        <i class="${itemData.icon || 'fa-solid fa-chevron-right'} menu-icon fa-fw"></i>
+                        <span class="menu-label">${itemData.label}</span>
+                        ${controlHtml}
+                    `;
+                    
+                    menuContent.appendChild(itemEl);
+                });
+
+                breadcrumbText.textContent = menuName;
+                backButton.style.display = navigationStack.length > 1 ? 'inline-block' : 'none';
+
+                attachEventListeners();
+                
+                // Select only interactive items for the active state
+                const interactiveItems = Array.from(document.querySelectorAll('.menu-item')).filter(item => item.dataset.type !== 'section' && item.dataset.type !== 'placeholder');
+
+                // Make the first interactive item active
+                if(interactiveItems.length > 0) {
+                    interactiveItems[0].classList.add('active');
+                }
+                
+                updateHighlight();
+            }
+
+            function attachEventListeners() {
+                // --- Highlight and Click Listener for all interactive menu items ---
+                const menuItems = Array.from(document.querySelectorAll('.menu-item')).filter(item => item.dataset.type !== 'section' && item.dataset.type !== 'placeholder');
+                
+                menuItems.forEach(item => {
+                    item.addEventListener('mouseover', () => {
+                        menuItems.forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        updateHighlight();
+                    });
+
+                    item.addEventListener('click', (e) => {
+                        const itemType = item.dataset.type;
+                        const itemLabel = item.dataset.label;
+                        
+                        if(itemType === 'link') {
+                            const targetMenu = item.dataset.target;
+                            if(targetMenu) {
+                                navigationStack.push(targetMenu);
+                                renderMenu(targetMenu);
+                            }
+                        }
+                        
+                        if (itemType === 'toggle' && e.target.closest('.toggle-switch')) {
+                            const toggleSwitch = e.target.closest('.toggle-switch');
+                            toggleSwitch.classList.toggle('active');
+                            const isActive = toggleSwitch.classList.contains('active');
+                            sendNuiMessage('toggleOption', {
+                                label: itemLabel,
+                                value: isActive
+                            });
+                        }
+
+                        if (itemType === 'button') {
+                             sendNuiMessage('buttonAction', {
+                                label: itemLabel,
+                                action: 'execute'
+                            });
+                        }
+                        
+                        // Prevent menu item click from interfering with input box focus
+                        if (itemType === 'input') {
+                           const inputEl = item.querySelector('.menu-input');
+                           if(inputEl && e.target !== inputEl) {
+                                inputEl.focus();
+                           }
+                        }
+                    });
+                });
+                
+                // --- Slider value update ---
+                document.querySelectorAll('input[type="range"]').forEach(slider => {
+                    slider.addEventListener('input', () => {
+                        const valueSpan = slider.previousElementSibling;
+                        valueSpan.textContent = slider.value;
+                        
+                        // Special case for Menu Scale
+                        if(slider.closest('.menu-item').dataset.label === 'Menu Scale') {
+                            menuContainer.style.transform = `translate(-50%, -50%) scale(${slider.value})`;
+                        }
+                        
+                        sendNuiMessage('sliderChange', {
+                            label: slider.closest('.menu-item').dataset.label,
+                            value: slider.value
+                        });
+                    });
+                });
+                
+                // --- Input value change listener (on blur) ---
+                document.querySelectorAll('.menu-input').forEach(input => {
+                    input.addEventListener('change', () => {
+                         sendNuiMessage('inputChange', {
+                            label: input.closest('.menu-item').dataset.label,
+                            value: input.value
+                        });
+                    });
+                });
+
+
+                // --- Options cycle ---
+                 document.querySelectorAll('.options-container').forEach(container => {
+                    const valueSpan = container.querySelector('.option-value');
+                    const leftArrow = container.querySelector('.ph-caret-left');
+                    const rightArrow = container.querySelector('.ph-caret-right');
+                    const menuItem = container.closest('.menu-item');
+                    
+                    const currentMenuName = navigationStack[navigationStack.length-1];
+                    const itemData = menuData[currentMenuName].find(d => d.label === menuItem.dataset.label);
+                    
+                    if(!itemData) return;
+
+                    let currentIndex = itemData.options.indexOf(valueSpan.textContent);
+
+                    const updateOption = (newIndex) => {
+                        currentIndex = newIndex;
+                        const newValue = itemData.options[currentIndex];
+                        valueSpan.textContent = newValue;
+
+                        if (itemData.label === 'Theme' && itemData.colors) {
+                           menuContainer.style.setProperty('--accent-color', itemData.colors[newValue]);
+                           // Update the default color definition if the theme changes away from the initial purple
+                           // This ensures consistency across dynamic and static elements
+                           // Not strictly necessary in this one-file NUI setup but good practice.
+                        }
+                        
+                        sendNuiMessage('optionChange', {
+                           label: itemData.label,
+                           value: newValue
+                        });
+                    };
+                    
+                    leftArrow.addEventListener('click', () => {
+                       updateOption((currentIndex - 1 + itemData.options.length) % itemData.options.length);
+                    });
+                    
+                     rightArrow.addEventListener('click', () => {
+                       updateOption((currentIndex + 1) % itemData.options.length);
+                    });
+                });
+            }
+
+            backButton.addEventListener('click', () => {
+                if (navigationStack.length > 1) {
+                    navigationStack.pop();
+                    renderMenu(navigationStack[navigationStack.length - 1]);
+                }
+            });
+
+            // --- Keyboard navigation ---
+            window.addEventListener('keydown', (e) => {
+                const interactiveItems = Array.from(document.querySelectorAll('.menu-item')).filter(item => item.dataset.type !== 'section' && item.dataset.type !== 'placeholder');
+                const currentActive = document.querySelector('.menu-item.active');
+                
+                if (interactiveItems.length === 0) return;
+                
+                let currentIndex = currentActive ? interactiveItems.indexOf(currentActive) : -1;
+
+                switch (e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        // Cycle to previous item, or last if currently at the first
+                        currentIndex = (currentIndex - 1 + interactiveItems.length) % interactiveItems.length;
+                        if (currentActive) currentActive.classList.remove('active');
+                        interactiveItems[currentIndex].classList.add('active');
+                        interactiveItems[currentIndex].scrollIntoView({ block: 'nearest' });
+                        updateHighlight();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        // Cycle to next item, or first if currently at the last
+                        currentIndex = (currentIndex + 1) % interactiveItems.length;
+                        if (currentActive) currentActive.classList.remove('active');
+                        interactiveItems[currentIndex].classList.add('active');
+                        interactiveItems[currentIndex].scrollIntoView({ block: 'nearest' });
+                        updateHighlight();
+                        break;
+                    case 'Enter': {
+                        e.preventDefault();
+                        if (!currentActive) return;
+                        
+                        const itemType = currentActive.dataset.type;
+                        
+                        if (itemType === 'link') {
+                            currentActive.click(); // Triggers navigation
+                        } else if (itemType === 'toggle') {
+                            currentActive.querySelector('.toggle-switch').click(); // Triggers toggle action
+                        } else if (itemType === 'button') {
+                            currentActive.click(); // Triggers button action
+                        }
+                        break;
+                    }
+                    case 'ArrowRight': {
+                        e.preventDefault();
+                        if (!currentActive) return;
+
+                        const itemType = currentActive.dataset.type;
+
+                        if (itemType === 'link') {
+                            currentActive.click(); // Navigate link
+                        } else if (itemType === 'slider') {
+                            const slider = currentActive.querySelector('input[type="range"]');
+                            slider.stepUp();
+                            slider.dispatchEvent(new Event('input'));
+                        } else if (itemType === 'options') {
+                            currentActive.querySelector('.ph-caret-right').click();
+                        }
+                        break;
+                    }
+                    case 'ArrowLeft': {
+                        e.preventDefault();
+                        if (!currentActive) {
+                            backButton.click();
+                            return;
+                        }
+
+                        const itemType = currentActive.dataset.type;
+                        
+                        if (itemType === 'slider') {
+                            const slider = currentActive.querySelector('input[type="range"]');
+                            slider.stepDown();
+                            slider.dispatchEvent(new Event('input'));
+                        } else if (itemType === 'options') {
+                            currentActive.querySelector('.ph-caret-left').click();
+                        } else {
+                            backButton.click();
+                        }
+                        break;
+                    }
+                    case 'Backspace':
+                        e.preventDefault();
+                        backButton.click();
+                        break;
+                }
+            });
+
+            // Initial render
+            renderMenu('Main Menu');
+        });
+    </script>
+
+</body>
+</html>
